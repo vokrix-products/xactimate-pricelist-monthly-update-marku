@@ -36,3 +36,4 @@ Dashboard: https://xactimate-pricelist-monthly-update-marku.vokrix.co
 Vercel: xactimate-pricelist-monthly-update-marku
 Railway: SERVICE_ID=bb24d991-9225-4228-a416-def844887e5f
 Railway: xactimate-pricelist-monthly-update-marku
+Cloudflare: xactimate-pricelist-monthly-update-marku.vokrix.co
