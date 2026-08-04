@@ -1,45 +1,36 @@
 # Xactimate Pricelist Monthly Update + Markup Auto-Applier (Restoration / Public Adjuster Tier)
 
-## Product
-Automates the monthly Xactimate pricelist update workflow for restoration contractors and public adjusters. Ingests Xactimate pricelist CSV files, evaluates recency of each line item (updated this month = current:good, older = outdated:critical), applies the configured markup percentage, and produces structured records for storage and downstream processing.
+Monthly Xactimate pricelist updates with automatic markup application - so every claim is accurate and every settlement is maximized.
 
-## Archetype
-Restoration / Public Adjuster Tier — built for restoration companies and public adjusters who need markup-adjusted line items for insurance claims and estimates.
+## Links
+- Landing page: https://vokrix.co/xactimate-pricelist-monthly-update-marku
+- Live dashboard: https://xactimate-pricelist-monthly-update-marku.vokrix.co
 
-## What the poller expects as input
-The poller (deployed on Railway) expects an Xactimate pricelist CSV file (bytes) with headers:
-ItemName, ItemCode, Category, BasePrice, MarkupPercent, LastUpdated
+## What this tool does
+- Automatically updates Xactimate pricelists monthly
+- Applies custom markup to every claim
+- Flags discrepancies before finalizing
+- Color-coded pricelist status: up-to-date, pending, outdated
+- Shows upcoming monthly refresh deadline
+- Tracks last applied markup percentage and date
 
-- LastUpdated must be ISO format YYYY-MM-DD
-- Status logic: last updated in current month → current:good; otherwise → outdated:critical
-- due_date is set to today for all outdated items
+## Who the buyer is
+Restoration contractors and public adjusters who need to keep Xactimate pricelists current and apply markup automatically.
 
-## Backend module
-processor.py exports process_file(file_bytes: bytes) -> list[dict].
+## What falls through without it
+- Missed updates lead to rejected or undervalued claims
+- Manual markup mistakes cost thousands in lost revenue
+- Last-minute rushes risk compliance and accuracy
 
-Each returned record has the shape:
-{
-  "title": "Water Extraction",
-  "status": "outdated:critical",
-  "details": {
-    "item_code": "W001",
-    "category": "Water Damage",
-    "base_price": 150.0,
-    "markup_percent": 20.0,
-    "final_price": 180.0,
-    "last_updated": "2024-01-15"
-  },
-  "due_date": "2026-08-04"
-}
+## Repository structure
+- poller.py - monthly pricelist refresh cycle
+- processor.py - markup application and discrepancy flagging
+- run_demo.py - local demo run
+- run_tests.py - test suite
+- backend/ - API service
+- dashboard/ - buyer-facing dashboard
 
-Dashboard: https://xactimate-pricelist-monthly-update-marku.vokrix.co
-Vercel: xactimate-pricelist-monthly-update-marku
-Railway: SERVICE_ID=bb24d991-9225-4228-a416-def844887e5f
-Railway: xactimate-pricelist-monthly-update-marku
-Cloudflare: xactimate-pricelist-monthly-update-marku.vokrix.co
+## Deployment
+- Poller: Railway
+- Domain: Cloudflare DNS
 
-Billing: price_1U0c9d2c9uGCcgMSv6PjEjWO
-
-Billing: 
-
-Billing: price_1U0cEE2c9uGCcgMSxsYqt0QA
