@@ -49,33 +49,9 @@ export function useJobs() {
   })
 }
 
-// PRODUCT_CUSTOMIZE: job_type defaults to 'process_upload'. Products with
-// multiple distinct upload types (rare) can pass a different value.
-const TRIAL_LIMIT = 3
-
-export function useTrialUsage() {
-  const user = useAuthStore((state) => state.auth.user)
-  const isPaid = !!(user as any)?.app_metadata?.product_id
-  const { data: jobs } = useJobs()
-  const used = jobs?.filter(j => ['pending','processing','completed'].includes(j.status)).length ?? 0
-  return { used, limit: TRIAL_LIMIT, isPaid }
-}
-
-async function getRecordCount(userId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from('jobs')
-    .select('*', { count: 'exact', head: true })
-    .eq('product_id', PRODUCT_ID)
-    .eq('customer_id', userId)
-    .in('status', ['pending', 'processing', 'completed'])
-  if (error) throw error
-  return count ?? 0
-}
-
 export function useUploadJob() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [trialLimitReached, setTrialLimitReached] = useState(false)
   const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.auth.user)
 
@@ -91,14 +67,6 @@ export function useUploadJob() {
     if (!user) {
       setError('Not logged in')
       return null
-    }
-    // Trial check: block upload if no active subscription and record limit hit
-    if (user.product_id !== import.meta.env.VITE_PRODUCT_ID) {
-      const count = await getRecordCount(user.id)
-      if (count >= TRIAL_LIMIT) {
-        setTrialLimitReached(true)
-        return null
-      }
     }
     setUploading(true)
     setError(null)
@@ -147,14 +115,6 @@ export function useUploadJob() {
       setError('No files selected')
       return null
     }
-    // Trial check
-    if (user.product_id !== import.meta.env.VITE_PRODUCT_ID) {
-      const count = await getRecordCount(user.id)
-      if (count >= TRIAL_LIMIT) {
-        setTrialLimitReached(true)
-        return null
-      }
-    }
     setUploading(true)
     setError(null)
 
@@ -192,7 +152,7 @@ export function useUploadJob() {
     }
   }
 
-  return { uploadFile, uploadFiles, uploading, error, trialLimitReached, setTrialLimitReached }
+  return { uploadFile, uploadFiles, uploading, error }
 }
 
 // PRODUCT_CUSTOMIZE: downloads the result file for a completed job from

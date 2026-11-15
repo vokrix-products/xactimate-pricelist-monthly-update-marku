@@ -12,66 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  useJobs,
-  useUploadJob,
-  useTrialUsage,
-  downloadJobResult,
-  type Job,
-} from '../data/jobs'
-import { AnimatedCircularProgressBar } from '@/components/magicui/animated-circular-progress-bar'
-
-const BILLING_WEBHOOK_URL = 'https://web-production-6adc6.up.railway.app'
-const PRICE_ID = (import.meta.env.VITE_STRIPE_PRICE_ID as string) ?? ''
-const PRODUCT_ID_VALUE = import.meta.env.VITE_PRODUCT_ID as string
-
-async function openCheckout() {
-  const res = await fetch(`${BILLING_WEBHOOK_URL}/create-checkout-session`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      price_id: PRICE_ID,
-      product_id: PRODUCT_ID_VALUE,
-      success_url: window.location.origin + '?upgraded=true',
-      cancel_url: window.location.href,
-    }),
-  })
-  const data = await res.json()
-  if (data.checkout_url) window.location.href = data.checkout_url
-}
-
-function PaywallModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent data-testid="paywall-modal">
-        <DialogHeader>
-          <DialogTitle>{import.meta.env.VITE_PAYWALL_TITLE ?? "You've used your 3 free uploads"}</DialogTitle>
-          <DialogDescription>
-            Upgrade to get unlimited uploads and full access.
-          </DialogDescription>
-        </DialogHeader>
-        <div className='space-y-4 pt-2'>
-          <p className='text-sm text-muted-foreground'>
-            $49/month — cancel anytime.
-          </p>
-          <Button className='w-full' onClick={openCheckout} data-testid="paywall-upgrade-button">
-            Upgrade now
-          </Button>
-          <Button variant='outline' className='w-full' onClick={onClose}>
-            Maybe later
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
+import { useJobs, useUploadJob, downloadJobResult, type Job } from '../data/jobs'
 
 function statusBadgeVariant(
   status: string
@@ -140,7 +81,7 @@ const SHOW_UPLOAD = PRODUCT_ARCHETYPE === 'extraction' || PRODUCT_ARCHETYPE === 
 const MULTI_FILE = false
 
 export function JobsCard() {
-  const { uploadFile, uploadFiles, uploading, error, trialLimitReached, setTrialLimitReached } = useUploadJob()
+  const { uploadFile, uploadFiles, uploading, error } = useUploadJob()
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const dragCounter = useRef(0)
 
@@ -178,9 +119,6 @@ export function JobsCard() {
     if (MULTI_FILE) uploadFiles(files)
     else if (files[0]) uploadFile(files[0])
   }
-  const { used, limit, isPaid } = useTrialUsage()
-  const pct = Math.round((used / limit) * 100)
-  const primaryColor = pct >= 100 ? '#ef4444' : pct >= 66 ? '#f59e0b' : '#5e6ad2'
   const { data: jobs, isLoading } = useJobs()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -211,45 +149,24 @@ export function JobsCard() {
       {isDraggingOver && SHOW_UPLOAD && (
         <FullscreenDropOverlay onDrop={handleFiles} />
       )}
-    <PaywallModal open={trialLimitReached} onClose={() => setTrialLimitReached(false)} />
     <Card className='relative overflow-hidden'>
         <ShineBorder shineColor={['#5e6ad2', '#a78bfa', '#5e6ad2']} borderWidth={1} />
       <CardHeader>
-        <CardTitle>
-          {SHOW_UPLOAD ? (MULTI_FILE ? 'Upload files' : 'Upload a file') : 'Processing Queue'}
-        </CardTitle>
+        <div className='flex items-center gap-2'>
+          <CardTitle>
+            {SHOW_UPLOAD ? (MULTI_FILE ? 'Upload files' : 'Upload a file') : 'Processing Queue'}
+          </CardTitle>
+          <Badge variant='secondary'>Free</Badge>
+        </div>
         {SHOW_UPLOAD && (
           <CardDescription>
             {MULTI_FILE
-              ? (import.meta.env.VITE_UPLOAD_DESCRIPTION_MULTI as string ?? 'Drop your files here and we’ll process them automatically.')
-              : (import.meta.env.VITE_UPLOAD_DESCRIPTION as string ?? 'Upload a file and we’ll process it automatically.')}
+              ? (import.meta.env.VITE_UPLOAD_DESCRIPTION_MULTI as string ?? 'Drop your files here and we’ll process them automatically. Free, unlimited uploads.')
+              : (import.meta.env.VITE_UPLOAD_DESCRIPTION as string ?? 'Upload a file and we’ll process it automatically. Free, unlimited uploads.')}
           </CardDescription>
         )}
       </CardHeader>
       <CardContent className='space-y-4'>
-        {SHOW_UPLOAD && !isPaid && (
-          <div className='flex items-center gap-4 rounded-lg border border-border bg-muted/30 px-4 py-3'>
-            <AnimatedCircularProgressBar
-              max={limit}
-              min={0}
-              value={used}
-              gaugePrimaryColor={primaryColor}
-              gaugeSecondaryColor='rgba(255,255,255,0.1)'
-              className='size-16 text-sm'
-            />
-            <div className='flex-1 min-w-0'>
-              <p className='text-sm font-medium'>{used} of {limit} free uploads used</p>
-              <p className='text-xs text-muted-foreground mt-0.5'>
-                {used >= limit ? 'Upgrade to continue uploading' : `${limit - used} remaining on free plan`}
-              </p>
-            </div>
-            {used >= limit && (
-              <button onClick={openCheckout} className='shrink-0 text-xs font-medium text-primary hover:underline'>
-                Upgrade
-              </button>
-            )}
-          </div>
-        )}
         {SHOW_UPLOAD && (
           <div
             className='relative flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-8 text-center overflow-hidden'
