@@ -6,7 +6,6 @@ import { SearchProvider } from '@/context/search-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SkipToMain } from '@/components/skip-to-main'
-import { ProductAssistant } from '@/components/product-assistant'
 
 type AuthenticatedLayoutProps = {
   children?: React.ReactNode
@@ -30,13 +29,12 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
               'has-data-[layout=fixed]:h-svh',
 
               // If layout is fixed and sidebar is inset,
-              // set the height to 100svh - spacing (total margins) to prevent overflow
+              // set the height to 100svh - spacing (total margins)
               'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
             )}
           >
             {children ?? <Outlet />}
           </SidebarInset>
-          <ProductAssistant />
         </SidebarProvider>
       </LayoutProvider>
     </SearchProvider>
